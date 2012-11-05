@@ -42,7 +42,7 @@ return array(
 	|
 	*/
 
-	'default' => 'development',
+	'default' => 'mysql',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -60,16 +60,6 @@ return array(
 	*/
 
 	'connections' => array(
-		
-		'development' => array(
-			'driver'   => 'mysql',
-			'host'     => 'localhost',
-			'database' => 'database',
-			'username' => 'root',
-			'password' => '',
-			'charset'  => 'utf8',
-			'prefix'   => '',
-		),
 
 		'sqlite' => array(
 			'driver'   => 'sqlite',
@@ -95,7 +85,7 @@ return array(
 			'password' => '',
 			'charset'  => 'utf8',
 			'prefix'   => '',
-            'schema'   => 'public',
+			'schema'   => 'public',
 		),
 
 		'sqlsrv' => array(
