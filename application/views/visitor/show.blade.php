@@ -1,0 +1,1 @@
+This is the /Applications/MAMP/htdocs/pictureApp/application/views/visitor/show.blade.php view

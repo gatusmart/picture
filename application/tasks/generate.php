@@ -3,7 +3,7 @@
 /**
  * Laravel Generator
  * 
- * Rapidly create models, views, migrations + schema, assets, etc.
+ * Rapidly create models, views, migrations + schema, assets, tests, etc.
  *
  * USAGE:
  * Add this file to your Laravel application/tasks directory
@@ -30,11 +30,28 @@ class Generate_Task
     public static $js_dir  = 'js/';
     public static $coffee_dir  = 'js/coffee/';
 
+
     /*
      * The content for the generate file
      */
     public static $content;
 
+
+    /**
+     * As a convenience, fetch popular assets for user
+     * php artisan generate:assets jquery.js <---
+     */
+    public static $external_assets = array(
+        // JavaScripts
+        'jquery.js' => 'http://code.jquery.com/jquery.js',
+        'backbone.js' => 'http://backbonejs.org/backbone.js',
+        'underscore.js' => 'http://underscorejs.org/underscore.js',
+        'handlebars.js' => 'http://cloud.github.com/downloads/wycats/handlebars.js/handlebars-1.0.rc.1.js',
+
+        // CSS
+        'normalize.css' => 'https://raw.github.com/necolas/normalize.css/master/normalize.css'
+    );
+    
 
     /**
      * Time Savers
@@ -90,17 +107,21 @@ EOT;
         }
 
         // Name of the class and file
-        $class_name = ucwords(array_shift($args));
+        $class_name = str_replace('.', '/', ucwords(array_shift($args)));
 
         // Where will this file be stored?
         $file_path = $this->path('controllers') . strtolower("$class_name.php");
 
+        // Admin/panel => Admin_Panel
+        $class_name = $this->prettify_class_name($class_name);
+
         // Begin building up the file's content
-        Content::new_class($class_name . '_Controller', 'Base_Controller');
+        Template::new_class($class_name . '_Controller', 'Base_Controller');
 
         $content = '';
         // Let's see if they added "restful" anywhere in the args.
         if ( $restful = $this->is_restful($args) ) {
+
             $args = array_diff($args, array('restful'));
             $content .= 'public $restful = true;';
         }
@@ -110,11 +131,11 @@ EOT;
             // Were params supplied? Like index:post?
             if ( strpos($method, ':') !== false ) {
                 list($method, $verb) = explode(':', $method);
-                $content .= Content::func("{$verb}_{$method}");
+                $content .= Template::func("{$verb}_{$method}");
             } else {
                 $action = $restful ? 'get' : 'action';
 
-                $content .= Content::func("{$action}_{$method}");
+                $content .= Template::func("{$action}_{$method}");
             }
         }
 
@@ -147,7 +168,7 @@ EOT;
         $file_path = $this->path('models') . strtolower("$class_name.php");
 
         // Begin building up the file's content
-        Content::new_class($class_name, 'Eloquent' );
+        Template::new_class($class_name, 'Eloquent' );
         $this->prettify();
 
         // Create the file
@@ -236,6 +257,7 @@ EOT;
      * @param  $assets array
      * @return void
      */
+    public function asset($assets) { return $this->assets($assets); }
     public function assets($assets)
     {
         if( empty($assets) ) {
@@ -278,6 +300,10 @@ EOT;
                     break;
             }
 
+            if ( $this->is_external_asset($asset) ) {
+                $this->fetch($asset);
+            } else { self::$content = ''; }
+
             $this->write_to_file(path('public') . $path, '');
         }
     }
@@ -303,16 +329,31 @@ EOT;
 
         $class_name = ucwords(array_shift($args));
 
-        $file_path = $this->path('tests') . strtolower("{$class_name}.test.php");
+        $file_path = $this->path('tests');
+        if ( isset($this->should_include_tests) ) {
+            $file_path .= 'controllers/';
+        }
+        $file_path .= strtolower("{$class_name}.test.php");
 
         // Begin building up the file's content
-        Content::new_class($class_name . '_Test', 'PHPUnit_Framework_TestCase');
+        Template::new_class($class_name . '_Test', 'PHPUnit_Framework_TestCase');
 
         // add the functions
         $tests = '';
         foreach($args as $test) {
+            // Don't worry about tests for non-get methods for now.
+            if ( strpos($test, ':') !== false ) continue;
+            if ( $test === 'restful' ) continue;
+
             // make lower case
-            $tests .= Content::func("test_{$test}");
+            $func = Template::func("test_{$test}");
+
+            // Only if we're generating a resource.
+            if ( isset($this->should_include_tests) ) {
+                $func = Template::test($class_name, $test);
+            }            
+
+            $tests .= $func;
         }
 
         // add funcs to class
@@ -320,6 +361,46 @@ EOT;
 
         // Create the file
         $this->write_to_file($file_path, $this->prettify());
+    }
+
+
+    /**
+     * Determines whether the asset that the user wants is
+     * contained with the external assets array 
+     *
+     * @param $assets string
+     * @return boolean
+     */
+    protected function is_external_asset($asset)
+    {
+        return array_key_exists(strtolower($asset), static::$external_assets);
+    }
+
+
+    /**
+     * Fetch external asset
+     *
+     * @param $url string
+     * @return string
+     */
+    protected function fetch($url)
+    {
+       self::$content = file_get_contents(static::$external_assets[$url]);
+       return self::$content;
+    }
+
+
+    /**
+     * Prepares the $name of the class
+     * Admin/panel => Admin_Panel
+     *
+     * @param $class_name string
+     */
+    protected function prettify_class_name($class_name)
+    {
+        return preg_replace_callback('/\/([a-zA-Z])/', function($m) {
+            return "_" . strtoupper($m[1]);
+        }, $class_name);
     }
 
 
@@ -337,7 +418,7 @@ EOT;
         list($table_action, $table_event) = $this->parse_action_type($class_name);
 
         // Now, we begin creating the contents of the file.
-        Content::new_class($class_name);
+        Template::new_class($class_name);
 
         /* The Migration Up Function */
         $up = $this->migration_up($table_event, $table_action, $table_name, $args);
@@ -354,10 +435,10 @@ EOT;
 
     protected function migration_up($table_event, $table_action, $table_name, $args)
     {
-        $up = Content::func('up');
+        $up = Template::func('up');
 
         // Insert a new schema function into the up function.
-        $up = $this->add_after('{', Content::schema($table_action, $table_name), $up);
+        $up = $this->add_after('{', Template::schema($table_action, $table_name), $up);
 
         // Create the field rules for for the schema
         if ( $table_event === 'create' ) {
@@ -381,16 +462,16 @@ EOT;
 
     protected function migration_down($table_event, $table_action, $table_name, $args)
     {
-        $down = Content::func('down');
+        $down = Template::func('down');
 
         if ( $table_event === 'create' ) {
-           $schema = Content::schema('drop', $table_name, false);
+           $schema = Template::schema('drop', $table_name, false);
 
            // Add drop schema into down function
            $down = $this->add_after('{', $schema, $down);
         } else {
             // for delete, add, and update
-            $schema = Content::schema('table', $table_name);
+            $schema = Template::schema('table', $table_name);
         }
 
         if ( $table_event === 'delete' ) {
@@ -431,21 +512,36 @@ EOT;
      */
     public function resource($args)
     {
+        if ( $this->should_include_tests($args) ) {
+            $args = array_diff($args, array('with_tests'));
+        }
+
         // Pluralize controller name
         if ( !preg_match('/admin|config/', $args[0]) ) {
             $args[0] = Str::plural($args[0]);
+        }
+
+        // If only the resource name was provided, let's build out the full resource map.
+        if ( count($args) === 1 ) {
+            $args = array($args[0], 'index', 'index:post', 'show', 'edit', 'new', 'update:put', 'destroy:delete', 'restful');
         }
 
         $this->controller($args);
 
         // Singular for everything else
         $resource_name = Str::singular(array_shift($args));
+        
+        // Should we include tests?
+        if ( isset($this->should_include_tests) ) {
+            $this->test(array_merge(array(Str::plural($resource_name)), $args));
+        }
 
         if ( $this->is_restful($args) ) {
             // Remove that restful item from the array. No longer needed.
             $args = array_diff($args, array('restful'));
-            $args = $this->determine_views($args);
         }
+
+        $args = $this->determine_views($args);
 
         // Let's take any supplied view names, and set them
         // in the resource name's directory.
@@ -474,29 +570,19 @@ EOT;
         // Try to figure out the table name
         // We'll use the word that comes immediately before "_table"
         // create_users_table => users
-        // preg_match('/([a-zA-Z]+)_table/', $class_name, $matches);
-        preg_match('/(\B)_([a-zA-Z]+)_?([a-zA-Z]+)?_table/', $class_name, $matches);
+        preg_match('/([a-zA-Z]+)_table/', $class_name, $matches);
 
         if ( empty($matches) ) {
             // Or, if the user doesn't write "table", we'll just use
             // the text at the end of the string
             // create_users => users
-            // preg_match('/_([a-zA-Z]+)$/', $class_name, $matches);
-            preg_match('/(\B)_([a-zA-Z]+)_?([a-zA-Z]+)?$/', $class_name, $matches);
+            preg_match('/_([a-zA-Z]+)$/', $class_name, $matches);
         }
-        
+
         // Hmm - I'm stumped. Just use a generic name.
-        
-        $result = '';
-        if (empty($matches)) {
-            $result = "TABLE";
-        } elseif (count($matches) > 3) {
-            $result = $matches[2].'_'.$matches[3];
-        } else {
-            $result = $matches[2];
-        }
-        return $result;
-            
+        return empty($matches)
+            ? "TABLE"
+            : $matches[1];
     }
 
 
@@ -631,6 +717,7 @@ EOT;
             return "\$table->drop_column(array(" . implode(', ', $fields) . "));";
         }
     }
+    
 
     public function path($dir)
     {
@@ -667,6 +754,7 @@ EOT;
 
     public function add_after($where, $to_add, $content)
     {
+        // return preg_replace('/' . $where . '/', $where . $to_add, $content, 1);
         return str_replace($where, $where . $to_add, $content);
     }
 
@@ -678,25 +766,69 @@ EOT;
     }
 
 
+    protected function should_include_tests($args)
+    {
+        $tests_pos = array_search('with_tests', $args);
+
+        if ( $tests_pos !== false ) {
+            return $this->should_include_tests = true;
+        }
+        
+        return false;
+    }
+
+
     protected function determine_views($args)
     {
-        // Separate index:post, and remove any non-GET views.
-        array_walk($args, function(&$arg, $index) use(&$args) {
-            // method, optional verb
+        $views = array();
+
+        foreach($args as $arg) {
             $bits = explode(':', $arg);
-            $arg = $bits[0];
+            $name = $bits[0];
 
-            if ( isset($bits[1]) && $bits[1] !== 'get' ) {
-                // then we shouldn't create a view for it.
-                unset($args[$index]);
+            if ( isset($bits[1]) && strtolower($bits[1]) === 'get' || !isset($bits[1]) ) {
+                $views[] = $name;
             }
-        });
+        }
 
-        return $args;
+        return $views;
     }
 }
 
 class Content {
+    public static function add_after($where, $to_add)
+    {
+        Generate_Task::$content = str_replace($where, $where . $to_add, Generate_Task::$content);
+
+    }
+}
+
+
+class Template {
+    public static function test($class_name, $test)
+    {
+        return <<<EOT
+    public function test_{$test}()
+    {
+        \$response = Controller::call('{$class_name}@$test'); 
+        \$this->assertEquals('200', \$response->foundation->getStatusCode());
+        \$this->assertRegExp('/.+/', (string)\$response, 'There should be some content in the $test view.');
+    }
+EOT;
+    }
+
+
+    public static function func($func_name)
+    {
+        return <<<EOT
+    public function {$func_name}()
+    {
+
+    }
+EOT;
+    }
+
+
     public static function new_class($name, $extends_class = null)
     {
         $content = "<?php class $name";
@@ -709,10 +841,6 @@ class Content {
         Generate_Task::$content = $content;
     }
 
-    public static function func($func_name)
-    {
-        return "public function {$func_name}() {}";
-    }
 
     public static function schema($table_action, $table_name, $cb = true)
     {
@@ -723,9 +851,4 @@ class Content {
             : $content . ');';
     }
 
-    public static function add_after($where, $to_add)
-    {
-        Generate_Task::$content = str_replace($where, $where . $to_add, Generate_Task::$content);
-
-    }
 }

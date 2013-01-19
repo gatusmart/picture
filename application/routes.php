@@ -32,10 +32,37 @@
 |
 */
 
-Route::get('/', function()
-{
-	return View::make('home.index');
+//Route::controller('home');
+//Route::controller('users');
+Route::controller('pictures');
+Route::controller('messages');
+Route::controller('visitors');
+
+Route::get('login','home@index');
+Route::get('logout','users@logout');
+
+Route::get('users/show', 'users@show');
+Route::get('users/(:any)', array('as' => 'users', 'uses' => 'users@index'));
+//Route::get('users', 'users@index');
+Route::controller('users');
+Route::get('testa', function(){
+	dd(Session::get('hej'));
+	}
+);
+Route::get('test', function(){
+	return Redirect::to('testa')->with('hej', array('Success' => true, 'message' => 'hej' ));
 });
+
+Route::get('/', function (){
+	if (Auth::guest())
+	{
+		return Redirect::to_action('home@index');
+	}
+	else{
+		return Redirect::to_action('users@index');
+	}
+}); 
+
 
 /*
 |--------------------------------------------------------------------------
@@ -107,5 +134,12 @@ Route::filter('csrf', function()
 
 Route::filter('auth', function()
 {
-	if (Auth::guest()) return Redirect::to('login');
+	if (Auth::guest())
+	{
+		// Save the attempted URL
+		Session::put('pre_login_url', URL::full());
+
+		// Redirect to login
+		return Redirect::to('login');
+	}
 });

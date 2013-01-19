@@ -24,7 +24,49 @@
         
         <!-- begin content -->
         <div class="wrapper">
-            @yield('content')
+            <!-- Top Bar -->
+                    <nav class="top-bar">
+                            <ul>
+                              <li class="name"><h1><a href="#">PictureApp.</a></h1></li>
+                              <li class="toggle-topbar"><a href="#"></a></li>
+                            </ul>
+
+                            <section>
+                              <ul class="left">
+                                  <li>{{HTML::link('messages/', 'Messages')}}</li>
+                                  <li>{{HTML::link('pictures/', 'Pictures')}}</li>
+                                  <li>{{HTML::link('users/show', 'Users')}}</li>
+                              </ul>
+
+                              <ul class="right">
+                              <li class="search">
+                                  <form>
+                                    <input type="search">
+                                  </form>
+                              </li>
+
+                                <li class="has-button">
+                                <a class="small button secondary radius" href="#">Search</a>
+                              </li>
+                              </ul>
+                            </section>
+                        </nav>            
+            <!-- End Top Bar -->
+            <div class="row">
+                <div class = "twelve columns centered">
+
+                    @yield('header')
+                    
+                    @if (Session::get('alert'))
+                        <div class= {{ '"alert-box '.Session::get('alert')['alert type'].'"'}}>
+                            {{Session::get('alert')['message']}}
+                            <a href="" class="close">&times;</a>
+                        </div>
+                    @endif
+                    
+                    @yield('content')
+                </div>
+            </div>
         </div>
         <!-- end content -->
         

@@ -4,6 +4,100 @@
 // Comment out this import if you are customizing you imports below
 @import "foundation";
 
+.replyButton{
+	font-size: 27px;
+	height: 20px;
+	margin-top: -10px !important;
+}
+.test{
+	margin: 0px;
+	}
+.testar{
+	margin: 0px;
+	}
+.viewConversation{
+	right: 17px	!important;
+}
+.report{
+	right: 32px	!important;
+	}
+.messagetest{
+	margin-bottom: -22px !important;
+	padding: 10px !important;
+}
+
+.message{
+	margin-bottom: 0px;
+	margin: 0px !important;
+}
+.reply{
+	margin-top: 5px;
+	margin-bottom: 0px;
+}
+.replymessage{
+	margin-bottom: 5px;
+}
+blockquote.special{
+	padding: 0px;
+	border-left: 0px;
+	border-bottom: 1px solid #DDD;
+}
+.messageText{
+		padding:0px !important;;
+	}
+
+.slidingDiv {
+}
+ 
+.show_hide {
+}
+.videoblock{
+    height: 0px;
+    overflow: hidden;
+    }
+
+@media only screen and (min-width: 768px){
+	.contactTumbnailPicture{
+		width: 70px !important;
+		padding: 0px !important;
+	}
+	.messageText{
+		width: 85% !important;
+	}
+	}
+
+@media only screen and (max-width: 768px){
+	.viewConversation{
+		right: 35px	!important;
+		font-size: 35px !important;
+	}
+
+	.messagetest{
+		margin-bottom: -16px !important;
+	}
+
+	.mobile-right{
+		float: right !important;
+	}
+	.contactTumbnailPicture{
+		width: 100% !important;
+		padding: 0px !important;
+		padding-left: 8px !important;
+	}
+	.messageText{
+		width: 100% !important;
+	}
+	.report{
+	right: 65px	!important;
+	font-size: 35px !important;
+	}
+
+	.close{
+	font-size: 35px !important;
+	}
+}
+
+
 // ----------------------------------------
 // Import specific parts of Foundation by commenting the import "foundation"
 // and uncommenting what you want below. You must uncomment the following if customizing

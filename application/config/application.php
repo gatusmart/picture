@@ -39,7 +39,7 @@ return array(
 	|
 	*/
 
-	'index' => 'index.php',
+	'index' => '',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -53,7 +53,7 @@ return array(
 	|
 	*/
 
-	'key' => 'YourSecretKeyGoesHere!',
+	'key' => 'gimj1e6rb1agflqRRMDkC4wVtdpHairX',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -67,7 +67,7 @@ return array(
 	|
 	*/
 
-	'profiler' => false,
+	'profiler' => true,
 
 	/*
 	|--------------------------------------------------------------------------
@@ -167,6 +167,7 @@ return array(
 		'Eloquent'   	=> 'Laravel\\Database\\Eloquent\\Model',
 		'Event'      	=> 'Laravel\\Event',
 		'File'       	=> 'Laravel\\File',
+		'Former' 		=> 'Former\Former',
 		'Filter'     	=> 'Laravel\\Routing\\Filter',
 		'Form'       	=> 'Laravel\\Form',
 		'Hash'       	=> 'Laravel\\Hash',

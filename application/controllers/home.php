@@ -32,7 +32,8 @@ class Home_Controller extends Base_Controller {
 
 	public function action_index()
 	{
-		return View::make('home.index');
+		$pictures = Picture::order_by('created_at','desc')->take(3)->get();
+		return View::make('home.index')->with('pictures',$pictures);
 	}
 
 }
