@@ -4,10 +4,10 @@ return array(
 	'connections' => array(
 		'mysql' => array(
 			'driver'   => 'mysql',
-			'host'     => $_SERVER['DB1_HOST'],
-			'database' => $_SERVER['DB1_NAME'],
-			'username' => $_SERVER['DB1_USER'],
-			'password' => $_SERVER['DB1_PASS'],
+			'host'     => 'tunnel.pagodabox.com:3306',
+			'database' => 'yuette',
+			'username' => 'nilsa',
+			'password' => 'jf6M7I5r',
 			'charset'  => 'utf8',
 			'prefix'   => '',
 		)
